@@ -171,12 +171,14 @@ export default function ContractApp() {
   const [contracts, setContracts] = useState<ContractRecord[]>([]);
   const [currentId, setCurrentId] = useState<string | undefined>();
   const [data, setData] = useState<ContractData>(defaultContractData);
+  const [customTitle, setCustomTitle] = useState("");
   const [settings, setSettings] = useState<ContractSettings>(defaultSettings);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("Шинэ гэрээний загвар бэлэн.");
   const [loading, setLoading] = useState(false);
 
-  const contractTitle = useMemo(() => titleFromData(data), [data]);
+  const fallbackTitle = useMemo(() => titleFromData(data), [data]);
+  const contractTitle = customTitle.trim() || fallbackTitle;
 
   function update(name: FieldName, value: string) {
     setData((current) => ({ ...current, [name]: value }));
@@ -237,6 +239,7 @@ export default function ContractApp() {
         body: JSON.stringify({ id: currentId, title: contractTitle, data })
       });
       setCurrentId(body.contract.id);
+      setCustomTitle(body.contract.title);
       setData(body.contract.data);
       await loadContracts(search);
       setStatus("Гэрээ хадгалагдлаа.");
@@ -249,12 +252,14 @@ export default function ContractApp() {
 
   function startNew() {
     setCurrentId(undefined);
+    setCustomTitle("");
     setData(defaultContractData);
     setStatus("Шинэ гэрээний загвар нээгдлээ.");
   }
 
   function openContract(contract: ContractRecord) {
     setCurrentId(contract.id);
+    setCustomTitle(contract.title);
     setData({ ...defaultContractData, ...contract.data });
     setStatus("Хадгалсан гэрээ нээгдлээ.");
   }
@@ -349,8 +354,10 @@ export default function ContractApp() {
       <section className="workspace">
         <header className="topbar no-print">
           <div className="topbar-title">
-            <p className="eyebrow">Одоогийн гэрээ</p>
-            <h2>{contractTitle}</h2>
+            <label className="title-control">
+              <span>Гэрээний нэр</span>
+              <input value={customTitle} onChange={(event) => setCustomTitle(event.target.value)} placeholder={fallbackTitle} />
+            </label>
             <span>{status}</span>
           </div>
           <div className="actions">

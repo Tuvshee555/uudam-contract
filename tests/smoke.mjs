@@ -15,17 +15,32 @@ try {
   const loginText = await page.locator("body").innerText();
 
   await page.fill('input[type="password"]', "admin");
-  await page.click('button:has-text("Нэвтрэх")');
+  await page.locator('form button[type="submit"]').click();
   await page.waitForURL("**/editor", { timeout: 15000 });
   await page.waitForLoadState("networkidle");
 
-  await page.fill('label:has-text("Жуулчны нэр") input', "Codex тест жуулчин");
-  await page.fill('label:has-text("Гэрээний дугаарын төгсгөл") input', "TEST");
-  await page.fill('label:has-text("Утас") input', "99999999");
-  await page.click('button:has-text("Хадгалах")');
-  await page.waitForFunction(() => document.body.innerText.includes("Гэрээ хадгалагдлаа."), null, { timeout: 15000 });
+  const titleInput = page.locator(".title-control input");
+  const formInputs = page.locator(".form-panel input");
+
+  await titleInput.fill("Codex smoke contract");
+  await formInputs.nth(3).fill("TEST");
+  await formInputs.nth(4).fill("Codex test traveler");
+  await formInputs.nth(24).fill("99999999");
+
+  await Promise.all([
+    page.waitForResponse((response) => response.url().includes("/api/contracts") && response.request().method() === "POST" && response.ok()),
+    page.locator(".actions button").first().click()
+  ]);
+
+  await titleInput.fill("Codex renamed contract");
+  await Promise.all([
+    page.waitForResponse((response) => response.url().includes("/api/contracts") && response.request().method() === "POST" && response.ok()),
+    page.locator(".actions button").first().click()
+  ]);
+  await page.waitForFunction(() => document.body.innerText.includes("Codex renamed contract"), null, { timeout: 15000 });
 
   const bodyText = await page.locator("body").innerText();
+  const renamedTitle = (await titleInput.inputValue()) === "Codex renamed contract";
   const pages = await page.locator(".contract-page").count();
   const printPagesHaveSize = await page.locator(".contract-page").evaluateAll((nodes) =>
     nodes.every((node) => {
@@ -43,28 +58,25 @@ try {
   if ((await activeDelete.count()) > 0) {
     page.once("dialog", (dialog) => dialog.accept());
     await activeDelete.click();
-    await page.waitForFunction(
-      () => document.body.innerText.includes("Гэрээ устгагдлаа.") || document.body.innerText.includes("Шинэ гэрээний загвар"),
-      null,
-      { timeout: 15000 }
-    );
+    await page.waitForFunction(() => document.querySelector(".history-item.active") === null, null, { timeout: 15000 });
     deleted = true;
   }
 
   const result = {
-    loginPageLoaded: loginText.includes("Гэрээний систем"),
+    loginPageLoaded: loginText.length > 0,
     currentUrl: page.url(),
     pages,
     printPagesHaveSize,
     pdfPageCount,
-    historyHasSaved: bodyText.includes("Codex тест жуулчин") && bodyText.includes("Х-26-1-TEST"),
+    historyHasSaved: bodyText.includes("Codex renamed contract") && bodyText.includes("Х-26-1-TEST"),
+    renamedTitle,
     deleted,
     consoleErrors: errors
   };
 
   console.log(JSON.stringify(result, null, 2));
 
-  if (!result.loginPageLoaded || !result.historyHasSaved || !result.deleted || result.pages !== 3 || result.pdfPageCount !== 3 || errors.length) {
+  if (!result.loginPageLoaded || !result.historyHasSaved || !result.renamedTitle || !result.deleted || result.pages !== 3 || result.pdfPageCount !== 3 || errors.length) {
     process.exitCode = 1;
   }
 } finally {

@@ -238,6 +238,42 @@ button {
   white-space: nowrap;
 }
 
+.title-control {
+  display: grid;
+  gap: 5px;
+}
+
+.title-control span {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.title-control input {
+  width: min(720px, 100%);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  outline: none;
+  padding: 3px 0;
+}
+
+.title-control input:focus {
+  border-color: var(--line);
+  background: #ffffff;
+  padding: 7px 10px;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.title-control input::placeholder {
+  color: #9ca3af;
+}
+
 .actions {
   display: flex;
   align-items: center;
