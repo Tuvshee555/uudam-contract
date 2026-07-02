@@ -481,6 +481,7 @@ button {
 }
 
 .signature-grid section + section {
+  position: relative;
   border-left: 1px solid #111111;
   padding-left: 14px;
 }
@@ -490,12 +491,25 @@ button {
   text-align: left;
 }
 
+.printed-line {
+  display: inline;
+  border-bottom: 1px solid #111111;
+  line-height: 1.35;
+}
+
+.printed-line.small-line {
+  display: inline-block;
+  min-width: 72px;
+}
+
 .default-assets {
+  position: relative;
   display: grid;
   grid-template-columns: 90px minmax(0, 1fr);
   gap: 4px 8px;
   align-items: end;
-  margin-top: 2px;
+  margin-top: 8px;
+  min-height: 44px;
 }
 
 .default-assets > span {
@@ -508,11 +522,14 @@ button {
 }
 
 .mark-stack {
-  position: relative;
+  position: absolute;
+  left: 54px;
+  bottom: -10px;
   display: block;
-  width: 168px;
-  height: 90px;
-  border-bottom: 1px solid #111111;
+  width: 220px;
+  height: 164px;
+  overflow: visible;
+  transform: translateY(-26px);
 }
 
 .signature-mark,
@@ -524,20 +541,20 @@ button {
 }
 
 .signature-mark {
-  left: 0;
-  top: 20px;
+  left: 38px;
+  bottom: 18px;
   z-index: 1;
-  width: 128px;
+  width: 126px;
   height: 54px;
-  object-position: left center;
+  object-position: left bottom;
 }
 
 .stamp-mark {
-  right: 6px;
-  top: -2px;
+  left: 48px;
+  bottom: 0;
   z-index: 2;
-  width: 102px;
-  height: 102px;
+  width: 138px;
+  height: 138px;
   opacity: 0.92;
 }
 

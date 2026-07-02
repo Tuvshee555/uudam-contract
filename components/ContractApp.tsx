@@ -536,10 +536,10 @@ function ContractDocument({
           </section>
           <section>
             <h3>Жуулчлал зохион байгуулагч:</h3>
-            <p>Овог нэр: Балжинням овогтой Өнөрбат</p>
-            <p>Регистрийн дугаар: ЦГ75080301</p>
-            <p>Хаяг: Сүхбаатар дүүрэг, 1-р хороо, Оюунлаг төвийн 5 давхарт 502 тоот</p>
-            <p>Утас: 77136633, 89136633, 91172769</p>
+            <p>Овог нэр: <span className="printed-line">Балжинням овогтой Өнөрбат</span></p>
+            <p>Регистрийн дугаар: <span className="printed-line small-line">ЦГ75080301</span></p>
+            <p>Хаяг: <span className="printed-line">Сүхбаатар дүүрэг, 1-р хороо, Оюунлаг төвийн 5 давхарт 502 тоот</span></p>
+            <p>Утас: <span className="printed-line">77136633, 89136633, 91172769</span></p>
             <div className="default-assets">
               <span>Гарын үсэг:</span>
               <LayeredMarks settings={settings} />
