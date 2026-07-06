@@ -297,13 +297,11 @@ function MoneyField({
 function PriceBreakdown({
   data,
   auto,
-  onResetAuto,
-  inline = false
+  onResetAuto
 }: {
   data: ContractData;
   auto: boolean;
   onResetAuto: () => void;
-  inline?: boolean;
 }) {
   const adultCount = toNumber(data.adultCount);
   const adultPrice = toNumber(data.adultPrice);
@@ -315,7 +313,7 @@ function PriceBreakdown({
   const calculatedTotal = adultTotal + childTotal + extraCost;
 
   return (
-    <div className={inline ? "price-breakdown price-breakdown-inline no-print" : "price-breakdown"}>
+    <div className="price-breakdown">
       <div className="price-breakdown-row">
         <span>Том хүн: {adultCount || 0} × {formatMoney(adultPrice)}₮</span>
         <strong>{formatMoney(adultTotal)}₮</strong>
@@ -639,14 +637,7 @@ export default function ContractApp() {
           </section>
 
           <section className="document-area">
-            <ContractDocument
-              data={data}
-              settings={settings}
-              update={update}
-              updateConsent={updateConsent}
-              totalPriceAuto={totalPriceAuto}
-              onResetAuto={resetTotalPriceToAuto}
-            />
+            <ContractDocument data={data} settings={settings} update={update} updateConsent={updateConsent} />
           </section>
         </div>
       </section>
@@ -658,16 +649,12 @@ function ContractDocument({
   data,
   settings,
   update,
-  updateConsent,
-  totalPriceAuto,
-  onResetAuto
+  updateConsent
 }: {
   data: ContractData;
   settings: ContractSettings;
   update: (name: FieldName, value: string) => void;
   updateConsent: (value: ConsentChoice) => void;
-  totalPriceAuto: boolean;
-  onResetAuto: () => void;
 }) {
   return (
     <div className="print-stack">
@@ -731,7 +718,6 @@ function ContractDocument({
           )}
           . Аяллын урьдчилгаа төлбөр хүн тус бүр 20-50% төлж, аяллын суудлаа баталгаажуулна. Худалдаа хөгжлийн банк 16000 4000 413143429 Уудам Тэс Магнай ХХК данс руу аяллын төлбөрийг шилжүүлнэ.
         </p>
-        <PriceBreakdown data={data} auto={totalPriceAuto} onResetAuto={onResetAuto} inline />
         <p>3.3 Аяллын урьдчилгаа төлбөр аяллын төрөл, онцлог, хугацаанааас хамаарч өөр өөр байж болно.</p>
         <p>3.4 Аливаа төлбөрийн үлдэгдлийг аялал эхлэхээс багадаа 10 өдрийн өмнө төлж барагдуулна.</p>
         <p>3.5 Аяллын төлбөрийг тоот төгрөгийн дансанд шилжүүлэх буюу бэлнээр төлнө.</p>
