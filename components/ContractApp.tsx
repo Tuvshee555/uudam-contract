@@ -13,7 +13,7 @@ import {
 
 type FieldName = keyof ContractData;
 
-const moneyFields: FieldName[] = ["adultPrice", "childPrice", "totalPrice"];
+const moneyFields: FieldName[] = ["adultPrice", "childPrice", "extraCost", "totalPrice"];
 
 const fieldGroups: Array<{ title: string; fields: Array<{ name: FieldName; label: string }> }> = [
   {
@@ -54,6 +54,8 @@ const fieldGroups: Array<{ title: string; fields: Array<{ name: FieldName; label
       { name: "adultPrice", label: "Том хүний үнэ" },
       { name: "childCount", label: "Хүүхдийн тоо" },
       { name: "childPrice", label: "Хүүхдийн үнэ" },
+      { name: "extraCost", label: "Нэмэлт зардал" },
+      { name: "extraCostNote", label: "Нэмэлт зардлын тайлбар" },
       { name: "totalPrice", label: "Нийт төлөх дүн" }
     ]
   },
@@ -100,7 +102,8 @@ function formatMoney(value: number) {
 function computeTotalPrice(data: ContractData) {
   const adultTotal = toNumber(data.adultCount) * toNumber(data.adultPrice);
   const childTotal = toNumber(data.childCount) * toNumber(data.childPrice);
-  const total = adultTotal + childTotal;
+  const extraTotal = toNumber(data.extraCost);
+  const total = adultTotal + childTotal + extraTotal;
   return total > 0 ? formatMoney(total) : "";
 }
 
@@ -294,22 +297,25 @@ function MoneyField({
 function PriceBreakdown({
   data,
   auto,
-  onResetAuto
+  onResetAuto,
+  inline = false
 }: {
   data: ContractData;
   auto: boolean;
   onResetAuto: () => void;
+  inline?: boolean;
 }) {
   const adultCount = toNumber(data.adultCount);
   const adultPrice = toNumber(data.adultPrice);
   const childCount = toNumber(data.childCount);
   const childPrice = toNumber(data.childPrice);
+  const extraCost = toNumber(data.extraCost);
   const adultTotal = adultCount * adultPrice;
   const childTotal = childCount * childPrice;
-  const calculatedTotal = adultTotal + childTotal;
+  const calculatedTotal = adultTotal + childTotal + extraCost;
 
   return (
-    <div className="price-breakdown">
+    <div className={inline ? "price-breakdown price-breakdown-inline no-print" : "price-breakdown"}>
       <div className="price-breakdown-row">
         <span>Том хүн: {adultCount || 0} × {formatMoney(adultPrice)}₮</span>
         <strong>{formatMoney(adultTotal)}₮</strong>
@@ -318,6 +324,12 @@ function PriceBreakdown({
         <span>Хүүхэд: {childCount || 0} × {formatMoney(childPrice)}₮</span>
         <strong>{formatMoney(childTotal)}₮</strong>
       </div>
+      {extraCost > 0 && (
+        <div className="price-breakdown-row">
+          <span>Нэмэлт зардал{data.extraCostNote ? `: ${data.extraCostNote}` : ""}</span>
+          <strong>{formatMoney(extraCost)}₮</strong>
+        </div>
+      )}
       <div className="price-breakdown-row total">
         <span>Тооцоолсон нийт дүн</span>
         <strong>{formatMoney(calculatedTotal)}₮</strong>
@@ -364,7 +376,7 @@ export default function ContractApp() {
   const fallbackTitle = useMemo(() => titleFromData(data), [data]);
   const contractTitle = customTitle.trim() || fallbackTitle;
 
-  const priceFields: FieldName[] = ["adultCount", "adultPrice", "childCount", "childPrice"];
+  const priceFields: FieldName[] = ["adultCount", "adultPrice", "childCount", "childPrice", "extraCost"];
 
   function update(name: FieldName, value: string) {
     if (name === "totalPrice") {
@@ -627,7 +639,14 @@ export default function ContractApp() {
           </section>
 
           <section className="document-area">
-            <ContractDocument data={data} settings={settings} update={update} updateConsent={updateConsent} />
+            <ContractDocument
+              data={data}
+              settings={settings}
+              update={update}
+              updateConsent={updateConsent}
+              totalPriceAuto={totalPriceAuto}
+              onResetAuto={resetTotalPriceToAuto}
+            />
           </section>
         </div>
       </section>
@@ -639,12 +658,16 @@ function ContractDocument({
   data,
   settings,
   update,
-  updateConsent
+  updateConsent,
+  totalPriceAuto,
+  onResetAuto
 }: {
   data: ContractData;
   settings: ContractSettings;
   update: (name: FieldName, value: string) => void;
   updateConsent: (value: ConsentChoice) => void;
+  totalPriceAuto: boolean;
+  onResetAuto: () => void;
 }) {
   return (
     <div className="print-stack">
@@ -700,8 +723,15 @@ function ContractDocument({
           <InlineField value={data.adultPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("adultPrice", v)} />₮ +{" "}
           <InlineField value={data.childCount} placeholder="хүүхэд" min={54} onChange={(v) => update("childCount", v)} /> хүүхэд{" "}
           <InlineField value={data.childPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("childPrice", v)} /> ₮ НИЙТ ТӨЛӨХ -{" "}
-          <InlineField value={data.totalPrice} placeholder="нийт дүн" min={112} money onChange={(v) => update("totalPrice", v)} />₮. Аяллын урьдчилгаа төлбөр хүн тус бүр 20-50% төлж, аяллын суудлаа баталгаажуулна. Худалдаа хөгжлийн банк 16000 4000 413143429 Уудам Тэс Магнай ХХК данс руу аяллын төлбөрийг шилжүүлнэ.
+          <InlineField value={data.totalPrice} placeholder="нийт дүн" min={112} money onChange={(v) => update("totalPrice", v)} />₮
+          {(data.extraCostNote.trim().length > 0 || data.extraCost.trim().length > 0) && (
+            <>
+              {" "}(Тайлбар: <InlineField value={data.extraCostNote} placeholder="нэмэлт зардлын тайлбар" min={160} wide multiline onChange={(v) => update("extraCostNote", v)} />)
+            </>
+          )}
+          . Аяллын урьдчилгаа төлбөр хүн тус бүр 20-50% төлж, аяллын суудлаа баталгаажуулна. Худалдаа хөгжлийн банк 16000 4000 413143429 Уудам Тэс Магнай ХХК данс руу аяллын төлбөрийг шилжүүлнэ.
         </p>
+        <PriceBreakdown data={data} auto={totalPriceAuto} onResetAuto={onResetAuto} inline />
         <p>3.3 Аяллын урьдчилгаа төлбөр аяллын төрөл, онцлог, хугацаанааас хамаарч өөр өөр байж болно.</p>
         <p>3.4 Аливаа төлбөрийн үлдэгдлийг аялал эхлэхээс багадаа 10 өдрийн өмнө төлж барагдуулна.</p>
         <p>3.5 Аяллын төлбөрийг тоот төгрөгийн дансанд шилжүүлэх буюу бэлнээр төлнө.</p>
