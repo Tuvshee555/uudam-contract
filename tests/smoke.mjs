@@ -20,12 +20,12 @@ try {
   await page.waitForLoadState("networkidle");
 
   const titleInput = page.locator(".title-control input");
-  const formInputs = page.locator(".form-panel input");
+  const formFields = page.locator(".form-panel .field-control");
 
   await titleInput.fill("Codex smoke contract");
-  await formInputs.nth(3).fill("TEST");
-  await formInputs.nth(4).fill("Codex test traveler");
-  await formInputs.nth(24).fill("99999999");
+  await formFields.nth(3).locator("input, textarea").fill("TEST");
+  await formFields.nth(4).locator("input, textarea").fill("Codex test traveler");
+  await formFields.nth(24).locator("input, textarea").fill("99999999");
 
   await Promise.all([
     page.waitForResponse((response) => response.url().includes("/api/contracts") && response.request().method() === "POST" && response.ok()),

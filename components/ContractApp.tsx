@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import {
   defaultContractData,
@@ -108,22 +108,10 @@ function InlineField({
     "--filled-width": filledWidth
   } as CSSProperties;
   const classes = `inline-field ${isFilled ? "filled" : ""} ${wide ? "wide" : ""} ${className}`;
+  const isFixedField = className.includes("fixed");
 
-  if (multiline || wide) {
-    return (
-      <textarea
-        className={`${classes} inline-textarea`}
-        value={value}
-        placeholder={placeholder}
-        rows={1}
-        style={fieldStyle}
-        onChange={(event) => onChange(event.target.value.replace(/\n/g, " "))}
-        onInput={(event) => {
-          event.currentTarget.style.height = "auto";
-          event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-        }}
-      />
-    );
+  if (!isFixedField) {
+    return <InlineFlowField className={`${classes} inline-flow-field`} value={value} placeholder={placeholder} style={fieldStyle} onChange={onChange} />;
   }
 
   return (
@@ -137,6 +125,46 @@ function InlineField({
   );
 }
 
+function InlineFlowField({
+  className,
+  value,
+  placeholder,
+  style,
+  onChange
+}: {
+  className: string;
+  value: string;
+  placeholder: string;
+  style: CSSProperties;
+  onChange: (value: string) => void;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (node.textContent !== value) {
+      node.textContent = value;
+    }
+  }, [value]);
+
+  return (
+    <span
+      ref={ref}
+      className={className}
+      contentEditable
+      suppressContentEditableWarning
+      data-placeholder={placeholder}
+      role="textbox"
+      style={style}
+      onInput={(event) => {
+        const nextValue = event.currentTarget.textContent?.replace(/[\r\n]+/g, " ") ?? "";
+        onChange(nextValue);
+      }}
+    />
+  );
+}
+
 function TextField({
   label,
   value,
@@ -146,10 +174,29 @@ function TextField({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    node.style.height = "auto";
+    node.style.height = `${node.scrollHeight}px`;
+  }, [value]);
+
   return (
     <label className="field-control">
       {label}
-      <input value={value} onChange={(event) => onChange(event.target.value)} />
+      <textarea
+        ref={ref}
+        className="field-textarea"
+        rows={1}
+        value={value}
+        onChange={(event) => onChange(event.target.value.replace(/\n/g, " "))}
+        onInput={(event) => {
+          event.currentTarget.style.height = "auto";
+          event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+        }}
+      />
     </label>
   );
 }

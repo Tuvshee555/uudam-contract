@@ -80,6 +80,7 @@ button {
 
 .login-box input,
 .field-control input,
+.field-control textarea,
 .search-box input {
   width: 100%;
   border: 1px solid var(--line);
@@ -91,9 +92,16 @@ button {
 
 .login-box input:focus,
 .field-control input:focus,
+.field-control textarea:focus,
 .search-box input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.field-control textarea {
+  min-height: 42px;
+  resize: none;
+  overflow: hidden;
 }
 
 .login-box button,
@@ -345,37 +353,38 @@ button {
 
 .contract-page {
   width: 210mm;
-  height: 297mm;
-  overflow: hidden;
+  min-height: 297mm;
+  height: auto;
+  overflow: visible;
   background: #ffffff;
   padding: 18mm 17mm 15mm;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
   color: #111111;
   font-family: "Times New Roman", "Noto Serif", serif;
-  font-size: 10.4pt;
-  line-height: 1.14;
+  font-size: 11.4pt;
+  line-height: 1.35;
 }
 
 .contract-page h1 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   text-align: center;
-  font-size: 12.2pt;
+  font-size: 13pt;
   font-weight: 700;
 }
 
 .contract-page h2 {
-  margin: 7px 0 3px;
+  margin: 10px 0 5px;
   text-align: center;
-  font-size: 10.8pt;
+  font-size: 11.4pt;
 }
 
 .contract-page h3 {
-  margin: 0 0 6px;
-  font-size: 10.5pt;
+  margin: 0 0 7px;
+  font-size: 11pt;
 }
 
 .contract-page p {
-  margin: 0 0 3px;
+  margin: 0 0 5px;
   text-align: justify;
 }
 
@@ -386,8 +395,8 @@ button {
   align-items: end;
   margin: 0 auto 8px !important;
   max-width: 150mm;
-  font-size: 10.2pt;
-  line-height: 1.1;
+  font-size: 10.8pt;
+  line-height: 1.16;
   text-align: left;
   white-space: nowrap;
 }
@@ -423,6 +432,7 @@ button {
   padding: 0 3px;
   outline: none;
   overflow-wrap: anywhere;
+  word-break: break-word;
   resize: none;
   vertical-align: baseline;
   white-space: pre-wrap;
@@ -453,12 +463,30 @@ button {
   max-width: 100%;
 }
 
-.inline-textarea {
-  width: min(100%, 260px);
-  height: 1.22em;
+.inline-flow-field {
+  display: inline;
+  min-width: 0;
   line-height: 1.15;
-  overflow: hidden;
-  transform: translateY(0.12em);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 0.18em;
+}
+
+.inline-flow-field:not(.filled) {
+  display: inline-block;
+  min-width: var(--empty-width);
+  text-decoration: none;
+}
+
+.inline-flow-field:not(.filled)::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+}
+
+.inline-flow-field:not(.filled) {
+  border-bottom: 1px solid #111111;
+  transform: translateY(0.06em);
 }
 
 .inline-field:focus {
@@ -640,6 +668,8 @@ button {
   .contract-page {
     width: 210mm;
     height: 297mm;
+    min-height: 297mm;
+    overflow: hidden;
     margin: 0;
     box-shadow: none;
     break-after: page;
@@ -665,7 +695,7 @@ button {
     width: var(--filled-width) !important;
   }
 
-  .inline-textarea.filled {
-    width: min(var(--filled-width), 100%) !important;
+  .inline-flow-field.filled {
+    width: auto !important;
   }
 }
