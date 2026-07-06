@@ -104,6 +104,54 @@ button {
   overflow: hidden;
 }
 
+.price-breakdown {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--soft-line);
+  border-radius: 8px;
+  background: #f9fafb;
+  display: grid;
+  gap: 6px;
+}
+
+.price-breakdown-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.price-breakdown-row.total {
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.price-breakdown-hint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.price-breakdown-hint.manual {
+  color: var(--danger);
+}
+
+.price-breakdown-hint button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .login-box button,
 .topbar button,
 .sidebar button,
@@ -181,11 +229,11 @@ button {
 
 .history-item button:first-child {
   display: grid;
-  gap: 3px;
+  gap: 4px;
   border: 0;
   border-radius: 0;
   background: transparent;
-  padding: 10px;
+  padding: 10px 12px;
   text-align: left;
 }
 
@@ -195,6 +243,13 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.3;
+}
+
+.history-item strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .history-item span,
@@ -203,6 +258,10 @@ button {
 .topbar span {
   color: var(--muted);
   font-size: 12px;
+}
+
+.history-item small {
+  font-size: 11px;
 }
 
 .history-item .delete {

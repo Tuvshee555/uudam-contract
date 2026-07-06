@@ -13,6 +13,8 @@ import {
 
 type FieldName = keyof ContractData;
 
+const moneyFields: FieldName[] = ["adultPrice", "childPrice", "totalPrice"];
+
 const fieldGroups: Array<{ title: string; fields: Array<{ name: FieldName; label: string }> }> = [
   {
     title: "Гэрээний эхлэл",
@@ -67,6 +69,41 @@ const fieldGroups: Array<{ title: string; fields: Array<{ name: FieldName; label
   }
 ];
 
+function todayContractDefaults(): Pick<
+  ContractData,
+  "contractYear" | "contractMonth" | "contractDay" | "startYear" | "startMonth" | "startDay"
+> {
+  const now = new Date();
+  const year = String(now.getFullYear());
+  const month = String(now.getMonth() + 1);
+  const day = String(now.getDate());
+  return {
+    contractYear: year,
+    contractMonth: month,
+    contractDay: day,
+    startYear: year,
+    startMonth: month,
+    startDay: day
+  };
+}
+
+function toNumber(value: string) {
+  const cleaned = value.replace(/[,\s]/g, "");
+  const parsed = Number.parseFloat(cleaned);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("mn-MN").format(Math.round(value));
+}
+
+function computeTotalPrice(data: ContractData) {
+  const adultTotal = toNumber(data.adultCount) * toNumber(data.adultPrice);
+  const childTotal = toNumber(data.childCount) * toNumber(data.childPrice);
+  const total = adultTotal + childTotal;
+  return total > 0 ? formatMoney(total) : "";
+}
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("mn-MN", {
     year: "numeric",
@@ -90,6 +127,7 @@ function InlineField({
   className = "",
   wide = false,
   multiline = false,
+  money = false,
   onChange
 }: {
   value: string;
@@ -98,6 +136,7 @@ function InlineField({
   className?: string;
   wide?: boolean;
   multiline?: boolean;
+  money?: boolean;
   onChange: (value: string) => void;
 }) {
   const isFilled = value.trim().length > 0;
@@ -111,7 +150,16 @@ function InlineField({
   const isFixedField = className.includes("fixed");
 
   if (!isFixedField) {
-    return <InlineFlowField className={`${classes} inline-flow-field`} value={value} placeholder={placeholder} style={fieldStyle} onChange={onChange} />;
+    return (
+      <InlineFlowField
+        className={`${classes} inline-flow-field`}
+        value={value}
+        placeholder={placeholder}
+        style={fieldStyle}
+        money={money}
+        onChange={onChange}
+      />
+    );
   }
 
   return (
@@ -130,23 +178,28 @@ function InlineFlowField({
   value,
   placeholder,
   style,
+  money = false,
   onChange
 }: {
   className: string;
   value: string;
   placeholder: string;
   style: CSSProperties;
+  money?: boolean;
   onChange: (value: string) => void;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
+  const focusedRef = useRef(false);
 
   useLayoutEffect(() => {
     const node = ref.current;
     if (!node) return;
-    if (node.textContent !== value) {
-      node.textContent = value;
+    if (focusedRef.current) return;
+    const display = money && value ? formatMoney(toNumber(value)) : value;
+    if (node.textContent !== display) {
+      node.textContent = display;
     }
-  }, [value]);
+  }, [value, money]);
 
   return (
     <span
@@ -157,6 +210,16 @@ function InlineFlowField({
       data-placeholder={placeholder}
       role="textbox"
       style={style}
+      onFocus={() => {
+        focusedRef.current = true;
+      }}
+      onBlur={(event) => {
+        focusedRef.current = false;
+        if (money) {
+          const raw = event.currentTarget.textContent?.replace(/[\r\n]+/g, " ") ?? "";
+          event.currentTarget.textContent = raw ? formatMoney(toNumber(raw)) : raw;
+        }
+      }}
       onInput={(event) => {
         const nextValue = event.currentTarget.textContent?.replace(/[\r\n]+/g, " ") ?? "";
         onChange(nextValue);
@@ -201,6 +264,78 @@ function TextField({
   );
 }
 
+function MoneyField({
+  label,
+  value,
+  onChange
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [focused, setFocused] = useState(false);
+  const displayValue = !focused && value ? formatMoney(toNumber(value)) : value;
+
+  return (
+    <label className="field-control">
+      {label}
+      <input
+        className="field-textarea"
+        inputMode="decimal"
+        value={displayValue}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onChange={(event) => onChange(event.target.value.replace(/[^\d.,\s]/g, ""))}
+      />
+    </label>
+  );
+}
+
+function PriceBreakdown({
+  data,
+  auto,
+  onResetAuto
+}: {
+  data: ContractData;
+  auto: boolean;
+  onResetAuto: () => void;
+}) {
+  const adultCount = toNumber(data.adultCount);
+  const adultPrice = toNumber(data.adultPrice);
+  const childCount = toNumber(data.childCount);
+  const childPrice = toNumber(data.childPrice);
+  const adultTotal = adultCount * adultPrice;
+  const childTotal = childCount * childPrice;
+  const calculatedTotal = adultTotal + childTotal;
+
+  return (
+    <div className="price-breakdown">
+      <div className="price-breakdown-row">
+        <span>Том хүн: {adultCount || 0} × {formatMoney(adultPrice)}₮</span>
+        <strong>{formatMoney(adultTotal)}₮</strong>
+      </div>
+      <div className="price-breakdown-row">
+        <span>Хүүхэд: {childCount || 0} × {formatMoney(childPrice)}₮</span>
+        <strong>{formatMoney(childTotal)}₮</strong>
+      </div>
+      <div className="price-breakdown-row total">
+        <span>Тооцоолсон нийт дүн</span>
+        <strong>{formatMoney(calculatedTotal)}₮</strong>
+      </div>
+      {auto ? (
+        <p className="price-breakdown-hint">Нийт дүн автоматаар бодогдож байна.</p>
+      ) : (
+        <p className="price-breakdown-hint manual">
+          Нийт дүнг гараар өөрчилсөн байна.{" "}
+          <button type="button" onClick={onResetAuto}>
+            Автоматаар дахин бодох
+          </button>
+        </p>
+      )}
+    </div>
+  );
+}
+
 function LayeredMarks({ settings }: { settings: ContractSettings }) {
   const signatureSrc = settings.organizerSignatureImage || "/signature.png";
   const stampSrc = settings.organizerStampImage || "/stamp.png";
@@ -217,18 +352,38 @@ function LayeredMarks({ settings }: { settings: ContractSettings }) {
 export default function ContractApp() {
   const [contracts, setContracts] = useState<ContractRecord[]>([]);
   const [currentId, setCurrentId] = useState<string | undefined>();
-  const [data, setData] = useState<ContractData>(defaultContractData);
+  const [data, setData] = useState<ContractData>(() => ({ ...defaultContractData, ...todayContractDefaults() }));
   const [customTitle, setCustomTitle] = useState("");
   const [settings, setSettings] = useState<ContractSettings>(defaultSettings);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("Шинэ гэрээний загвар бэлэн.");
   const [loading, setLoading] = useState(false);
 
+  const [totalPriceAuto, setTotalPriceAuto] = useState(true);
+
   const fallbackTitle = useMemo(() => titleFromData(data), [data]);
   const contractTitle = customTitle.trim() || fallbackTitle;
 
+  const priceFields: FieldName[] = ["adultCount", "adultPrice", "childCount", "childPrice"];
+
   function update(name: FieldName, value: string) {
-    setData((current) => ({ ...current, [name]: value }));
+    if (name === "totalPrice") {
+      setTotalPriceAuto(false);
+      setData((current) => ({ ...current, totalPrice: value }));
+      return;
+    }
+    setData((current) => {
+      const next = { ...current, [name]: value };
+      if (priceFields.includes(name) && totalPriceAuto) {
+        next.totalPrice = computeTotalPrice(next);
+      }
+      return next;
+    });
+  }
+
+  function resetTotalPriceToAuto() {
+    setTotalPriceAuto(true);
+    setData((current) => ({ ...current, totalPrice: computeTotalPrice(current) }));
   }
 
   function updateConsent(value: ConsentChoice) {
@@ -300,7 +455,8 @@ export default function ContractApp() {
   function startNew() {
     setCurrentId(undefined);
     setCustomTitle("");
-    setData(defaultContractData);
+    setData({ ...defaultContractData, ...todayContractDefaults() });
+    setTotalPriceAuto(true);
     setStatus("Шинэ гэрээний загвар нээгдлээ.");
   }
 
@@ -308,6 +464,7 @@ export default function ContractApp() {
     setCurrentId(contract.id);
     setCustomTitle(contract.title);
     setData({ ...defaultContractData, ...contract.data });
+    setTotalPriceAuto(false);
     setStatus("Хадгалсан гэрээ нээгдлээ.");
   }
 
@@ -422,15 +579,27 @@ export default function ContractApp() {
               <div className="form-group" key={group.title}>
                 <h3>{group.title}</h3>
                 <div className="field-grid">
-                  {group.fields.map((field) => (
-                    <TextField
-                      key={field.name}
-                      label={field.label}
-                      value={String(data[field.name])}
-                      onChange={(value) => update(field.name, value)}
-                    />
-                  ))}
+                  {group.fields.map((field) =>
+                    moneyFields.includes(field.name) ? (
+                      <MoneyField
+                        key={field.name}
+                        label={field.label}
+                        value={String(data[field.name])}
+                        onChange={(value) => update(field.name, value)}
+                      />
+                    ) : (
+                      <TextField
+                        key={field.name}
+                        label={field.label}
+                        value={String(data[field.name])}
+                        onChange={(value) => update(field.name, value)}
+                      />
+                    )
+                  )}
                 </div>
+                {group.title === "Төлбөр" && (
+                  <PriceBreakdown data={data} auto={totalPriceAuto} onResetAuto={resetTotalPriceToAuto} />
+                )}
               </div>
             ))}
             <div className="form-group">
@@ -528,10 +697,10 @@ function ContractDocument({
         <h2>3. Ажил үйлчилгээний төлбөр</h2>
         <p>
           3.16 Жуулчлалын үйлчилгээний нийт төлбөр - <InlineField value={data.adultCount} placeholder="том хүн" min={54} onChange={(v) => update("adultCount", v)} /> том хүн*
-          <InlineField value={data.adultPrice} placeholder="төлбөр" min={92} onChange={(v) => update("adultPrice", v)} />₮ +{" "}
+          <InlineField value={data.adultPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("adultPrice", v)} />₮ +{" "}
           <InlineField value={data.childCount} placeholder="хүүхэд" min={54} onChange={(v) => update("childCount", v)} /> хүүхэд{" "}
-          <InlineField value={data.childPrice} placeholder="төлбөр" min={92} onChange={(v) => update("childPrice", v)} /> ₮ НИЙТ ТӨЛӨХ -{" "}
-          <InlineField value={data.totalPrice} placeholder="нийт дүн" min={112} onChange={(v) => update("totalPrice", v)} />₮. Аяллын урьдчилгаа төлбөр хүн тус бүр 20-50% төлж, аяллын суудлаа баталгаажуулна. Худалдаа хөгжлийн банк 16000 4000 413143429 Уудам Тэс Магнай ХХК данс руу аяллын төлбөрийг шилжүүлнэ.
+          <InlineField value={data.childPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("childPrice", v)} /> ₮ НИЙТ ТӨЛӨХ -{" "}
+          <InlineField value={data.totalPrice} placeholder="нийт дүн" min={112} money onChange={(v) => update("totalPrice", v)} />₮. Аяллын урьдчилгаа төлбөр хүн тус бүр 20-50% төлж, аяллын суудлаа баталгаажуулна. Худалдаа хөгжлийн банк 16000 4000 413143429 Уудам Тэс Магнай ХХК данс руу аяллын төлбөрийг шилжүүлнэ.
         </p>
         <p>3.3 Аяллын урьдчилгаа төлбөр аяллын төрөл, онцлог, хугацаанааас хамаарч өөр өөр байж болно.</p>
         <p>3.4 Аливаа төлбөрийн үлдэгдлийг аялал эхлэхээс багадаа 10 өдрийн өмнө төлж барагдуулна.</p>
