@@ -378,6 +378,12 @@ button {
   gap: 10px;
 }
 
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .segmented {
   display: grid;
   grid-template-columns: 1fr 1fr;

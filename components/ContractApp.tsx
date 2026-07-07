@@ -15,7 +15,9 @@ type FieldName = keyof ContractData;
 
 const moneyFields: FieldName[] = ["adultPrice", "childPrice", "extraCost", "totalPrice"];
 
-const fieldGroups: Array<{ title: string; fields: Array<{ name: FieldName; label: string }> }> = [
+type FieldDef = { name: FieldName; label: string; pairWith?: FieldName };
+
+const fieldGroups: Array<{ title: string; fields: FieldDef[] }> = [
   {
     title: "Гэрээний эхлэл",
     fields: [
@@ -54,7 +56,7 @@ const fieldGroups: Array<{ title: string; fields: Array<{ name: FieldName; label
       { name: "adultPrice", label: "Том хүний үнэ" },
       { name: "childCount", label: "Хүүхдийн тоо" },
       { name: "childPrice", label: "Хүүхдийн үнэ" },
-      { name: "extraCost", label: "Нэмэлт зардал" },
+      { name: "extraCost", label: "Нэмэлт зардал", pairWith: "extraCostNote" },
       { name: "extraCostNote", label: "Нэмэлт зардлын тайлбар" },
       { name: "totalPrice", label: "Нийт төлөх дүн" }
     ]
@@ -589,23 +591,40 @@ export default function ContractApp() {
               <div className="form-group" key={group.title}>
                 <h3>{group.title}</h3>
                 <div className="field-grid">
-                  {group.fields.map((field) =>
-                    moneyFields.includes(field.name) ? (
-                      <MoneyField
-                        key={field.name}
-                        label={field.label}
-                        value={String(data[field.name])}
-                        onChange={(value) => update(field.name, value)}
-                      />
-                    ) : (
-                      <TextField
-                        key={field.name}
-                        label={field.label}
-                        value={String(data[field.name])}
-                        onChange={(value) => update(field.name, value)}
-                      />
-                    )
-                  )}
+                  {(() => {
+                    const paired = new Set(group.fields.filter((f) => f.pairWith).map((f) => f.pairWith));
+                    function renderField(field: FieldDef) {
+                      return moneyFields.includes(field.name) ? (
+                        <MoneyField
+                          key={field.name}
+                          label={field.label}
+                          value={String(data[field.name])}
+                          onChange={(value) => update(field.name, value)}
+                        />
+                      ) : (
+                        <TextField
+                          key={field.name}
+                          label={field.label}
+                          value={String(data[field.name])}
+                          onChange={(value) => update(field.name, value)}
+                        />
+                      );
+                    }
+                    return group.fields
+                      .filter((field) => !paired.has(field.name))
+                      .map((field) => {
+                        if (field.pairWith) {
+                          const partner = group.fields.find((f) => f.name === field.pairWith);
+                          return (
+                            <div className="field-row" key={field.name}>
+                              {renderField(field)}
+                              {partner && renderField(partner)}
+                            </div>
+                          );
+                        }
+                        return renderField(field);
+                      });
+                  })()}
                 </div>
                 {group.title === "Төлбөр" && (
                   <PriceBreakdown data={data} auto={totalPriceAuto} onResetAuto={resetTotalPriceToAuto} />
