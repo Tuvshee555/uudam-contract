@@ -10,6 +10,7 @@ import {
   type ContractSettings,
   type ConsentChoice
 } from "@/lib/types";
+import { buildContractDocx } from "@/lib/buildContractDocx";
 
 type FieldName = keyof ContractData;
 
@@ -502,6 +503,24 @@ export default function ContractApp() {
     window.print();
   }
 
+  async function downloadWord() {
+    setStatus("Word файл бэлдэж байна...");
+    try {
+      const blob = await buildContractDocx(data);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${contractTitle}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setStatus("Word файл татагдлаа.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Word файл үүсгэхэд алдаа гарлаа.");
+    }
+  }
+
   async function shareContract() {
     const text = `${contractTitle}\nГэрээний дугаар: Х-26-1-${data.contractNumberSuffix || ""}`;
     if (navigator.share) {
@@ -581,6 +600,7 @@ export default function ContractApp() {
               {loading ? "Хадгалж байна..." : "Хадгалах"}
             </button>
             <button onClick={downloadPdf}>PDF татах</button>
+            <button onClick={downloadWord}>Word татах</button>
             <button onClick={shareContract}>Илгээх</button>
           </div>
         </header>

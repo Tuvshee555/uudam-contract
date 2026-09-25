@@ -10,6 +10,7 @@
     "smoke": "node tests/smoke.mjs"
   },
   "dependencies": {
+    "docx": "^9.7.2",
     "next": "latest",
     "pg": "latest",
     "react": "latest",
