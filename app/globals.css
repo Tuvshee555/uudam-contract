@@ -209,6 +209,7 @@ button {
   display: grid;
   gap: 8px;
   min-height: 0;
+  flex: 1 1 auto;
   overflow: auto;
 }
 
@@ -695,6 +696,11 @@ button {
   .sidebar {
     position: static;
     height: auto;
+    max-height: 80vh;
+  }
+
+  .history-list {
+    max-height: 45vh;
   }
 
   .editor-layout {
