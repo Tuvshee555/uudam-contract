@@ -15,6 +15,7 @@ import { buildContractDocx } from "@/lib/buildContractDocx";
 type FieldName = keyof ContractData;
 
 const moneyFields: FieldName[] = ["adultPrice", "childPrice", "extraCost", "totalPrice"];
+const nameFields: FieldName[] = ["touristName", "travelerFullName"];
 
 type FieldDef = { name: FieldName; label: string; pairWith?: FieldName };
 
@@ -102,6 +103,10 @@ function formatMoney(value: number) {
   return new Intl.NumberFormat("mn-MN").format(Math.round(value));
 }
 
+function toTitleCase(value: string) {
+  return value.replace(/[^\s-]+/gu, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
 function computeTotalPrice(data: ContractData) {
   const adultTotal = toNumber(data.adultCount) * toNumber(data.adultPrice);
   const childTotal = toNumber(data.childCount) * toNumber(data.childPrice);
@@ -134,6 +139,7 @@ function InlineField({
   wide = false,
   multiline = false,
   money = false,
+  titleCase = false,
   onChange
 }: {
   value: string;
@@ -143,6 +149,7 @@ function InlineField({
   wide?: boolean;
   multiline?: boolean;
   money?: boolean;
+  titleCase?: boolean;
   onChange: (value: string) => void;
 }) {
   const isFilled = value.trim().length > 0;
@@ -163,6 +170,7 @@ function InlineField({
         placeholder={placeholder}
         style={fieldStyle}
         money={money}
+        titleCase={titleCase}
         onChange={onChange}
       />
     );
@@ -185,6 +193,7 @@ function InlineFlowField({
   placeholder,
   style,
   money = false,
+  titleCase = false,
   onChange
 }: {
   className: string;
@@ -192,6 +201,7 @@ function InlineFlowField({
   placeholder: string;
   style: CSSProperties;
   money?: boolean;
+  titleCase?: boolean;
   onChange: (value: string) => void;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -224,6 +234,11 @@ function InlineFlowField({
         if (money) {
           const raw = event.currentTarget.textContent?.replace(/[\r\n]+/g, " ") ?? "";
           event.currentTarget.textContent = raw ? formatMoney(toNumber(raw)) : raw;
+        } else if (titleCase) {
+          const raw = event.currentTarget.textContent?.replace(/[\r\n]+/g, " ") ?? "";
+          const formatted = toTitleCase(raw);
+          event.currentTarget.textContent = formatted;
+          if (formatted !== raw) onChange(formatted);
         }
       }}
       onInput={(event) => {
@@ -237,10 +252,12 @@ function InlineFlowField({
 function TextField({
   label,
   value,
+  titleCase = false,
   onChange
 }: {
   label: string;
   value: string;
+  titleCase?: boolean;
   onChange: (value: string) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -264,6 +281,9 @@ function TextField({
         onInput={(event) => {
           event.currentTarget.style.height = "auto";
           event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+        }}
+        onBlur={(event) => {
+          if (titleCase) onChange(toTitleCase(event.currentTarget.value));
         }}
       />
     </label>
@@ -626,6 +646,7 @@ export default function ContractApp() {
                           key={field.name}
                           label={field.label}
                           value={String(data[field.name])}
+                          titleCase={nameFields.includes(field.name)}
                           onChange={(value) => update(field.name, value)}
                         />
                       );
@@ -718,7 +739,7 @@ function ContractDocument({
           Энэхүү <strong>АЯЛАЛ ЖУУЛЧЛАЛЫН ГЭРЭЭ</strong>(цаашид “Гэрээ” гэх)-г нэг талаас Монгол Улсын хуулийн дагуу байгуулагдсан
           Уудам Тэс Магнай ХХК, РД: 7225689 (цаашид “Жуулчлал зохион байгуулагч” гэх) түүнийг төлөөлж
           <strong> Балжиннямын Өнөрбат </strong>(Регистрийн дугаар <strong>ЦГ75080301</strong>) нөгөө талаас{" "}
-          <InlineField value={data.touristName} placeholder="Жуулчны нэр" min={230} wide multiline onChange={(v) => update("touristName", v)} />{" "}
+          <InlineField value={data.touristName} placeholder="Жуулчны нэр" min={230} wide multiline titleCase onChange={(v) => update("touristName", v)} />{" "}
           (цаашид “Жуулчин” гэх (хамтад нь “Талууд” гэх) нар Монгол улсын Иргэний хуулийн 370 дугаар зүйл, Аялал жуулчлалын тухай хууль
           болон бусад холбогдох хууль тогтоомж, дүрэм, журмыг удирдлага болгон дараах нөхцөлийг харилцан тохиролцон байгуулав.
         </p>
@@ -805,7 +826,7 @@ function ContractDocument({
         <div className="signature-grid">
           <section>
             <h3>Жуулчин:</h3>
-            <p>Овог нэр: <InlineField value={data.travelerFullName} placeholder="овог нэр" min={190} wide multiline onChange={(v) => update("travelerFullName", v)} /></p>
+            <p>Овог нэр: <InlineField value={data.travelerFullName} placeholder="овог нэр" min={190} wide multiline titleCase onChange={(v) => update("travelerFullName", v)} /></p>
             <p>Регистрийн дугаар: <InlineField value={data.travelerRegister} placeholder="регистр" min={150} onChange={(v) => update("travelerRegister", v)} /></p>
             <p>Хаяг: <InlineField value={data.travelerAddress} placeholder="хаяг" min={240} wide multiline onChange={(v) => update("travelerAddress", v)} /></p>
             <p>Утас: <InlineField value={data.travelerPhone} placeholder="утас" min={150} onChange={(v) => update("travelerPhone", v)} /></p>
