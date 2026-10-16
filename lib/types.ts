@@ -21,6 +21,8 @@ export type ContractData = {
   adultPrice: string;
   childCount: string;
   childPrice: string;
+  smallChildCount: string;
+  smallChildPrice: string;
   infantCount: string;
   infantPrice: string;
   extraCost: string;
@@ -70,6 +72,8 @@ export const defaultContractData: ContractData = {
   adultPrice: "",
   childCount: "",
   childPrice: "",
+  smallChildCount: "",
+  smallChildPrice: "",
   infantCount: "",
   infantPrice: "",
   extraCost: "",
