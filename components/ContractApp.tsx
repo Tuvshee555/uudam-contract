@@ -14,7 +14,7 @@ import { buildContractDocx } from "@/lib/buildContractDocx";
 
 type FieldName = keyof ContractData;
 
-const moneyFields: FieldName[] = ["adultPrice", "childPrice", "extraCost", "totalPrice"];
+const moneyFields: FieldName[] = ["adultPrice", "childPrice", "infantPrice", "extraCost", "totalPrice"];
 const nameFields: FieldName[] = ["touristName", "travelerFullName"];
 
 type FieldDef = { name: FieldName; label: string; pairWith?: FieldName };
@@ -56,8 +56,10 @@ const fieldGroups: Array<{ title: string; fields: FieldDef[] }> = [
     fields: [
       { name: "adultCount", label: "Том хүний тоо" },
       { name: "adultPrice", label: "Том хүний үнэ" },
-      { name: "childCount", label: "Хүүхдийн тоо" },
-      { name: "childPrice", label: "Хүүхдийн үнэ" },
+      { name: "childCount", label: "Жижиг хүүхдийн тоо" },
+      { name: "childPrice", label: "Жижиг хүүхдийн үнэ" },
+      { name: "infantCount", label: "Нярайн тоо" },
+      { name: "infantPrice", label: "Нярайн үнэ" },
       { name: "extraCost", label: "Нэмэлт зардал", pairWith: "extraCostNote" },
       { name: "extraCostNote", label: "Нэмэлт зардлын тайлбар" },
       { name: "totalPrice", label: "Нийт төлөх дүн" }
@@ -110,8 +112,9 @@ function toTitleCase(value: string) {
 function computeTotalPrice(data: ContractData) {
   const adultTotal = toNumber(data.adultCount) * toNumber(data.adultPrice);
   const childTotal = toNumber(data.childCount) * toNumber(data.childPrice);
+  const infantTotal = toNumber(data.infantCount) * toNumber(data.infantPrice);
   const extraTotal = toNumber(data.extraCost);
-  const total = adultTotal + childTotal + extraTotal;
+  const total = adultTotal + childTotal + infantTotal + extraTotal;
   return total > 0 ? formatMoney(total) : "";
 }
 
@@ -330,10 +333,13 @@ function PriceBreakdown({
   const adultPrice = toNumber(data.adultPrice);
   const childCount = toNumber(data.childCount);
   const childPrice = toNumber(data.childPrice);
+  const infantCount = toNumber(data.infantCount);
+  const infantPrice = toNumber(data.infantPrice);
   const extraCost = toNumber(data.extraCost);
   const adultTotal = adultCount * adultPrice;
   const childTotal = childCount * childPrice;
-  const calculatedTotal = adultTotal + childTotal + extraCost;
+  const infantTotal = infantCount * infantPrice;
+  const calculatedTotal = adultTotal + childTotal + infantTotal + extraCost;
 
   return (
     <div className="price-breakdown">
@@ -342,9 +348,15 @@ function PriceBreakdown({
         <strong>{formatMoney(adultTotal)}₮</strong>
       </div>
       <div className="price-breakdown-row">
-        <span>Хүүхэд: {childCount || 0} × {formatMoney(childPrice)}₮</span>
+        <span>Жижиг хүүхэд: {childCount || 0} × {formatMoney(childPrice)}₮</span>
         <strong>{formatMoney(childTotal)}₮</strong>
       </div>
+      {infantCount > 0 && (
+        <div className="price-breakdown-row">
+          <span>Нярай: {infantCount || 0} × {formatMoney(infantPrice)}₮</span>
+          <strong>{formatMoney(infantTotal)}₮</strong>
+        </div>
+      )}
       {extraCost > 0 && (
         <div className="price-breakdown-row">
           <span>Нэмэлт зардал{data.extraCostNote ? `: ${data.extraCostNote}` : ""}</span>
@@ -397,7 +409,7 @@ export default function ContractApp() {
   const fallbackTitle = useMemo(() => titleFromData(data), [data]);
   const contractTitle = customTitle.trim() || fallbackTitle;
 
-  const priceFields: FieldName[] = ["adultCount", "adultPrice", "childCount", "childPrice", "extraCost"];
+  const priceFields: FieldName[] = ["adultCount", "adultPrice", "childCount", "childPrice", "infantCount", "infantPrice", "extraCost"];
 
   function update(name: FieldName, value: string) {
     if (name === "totalPrice") {
@@ -768,8 +780,10 @@ function ContractDocument({
         <p>
           3.16 Жуулчлалын үйлчилгээний нийт төлбөр - <InlineField value={data.adultCount} placeholder="том хүн" min={54} onChange={(v) => update("adultCount", v)} /> том хүн*
           <InlineField value={data.adultPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("adultPrice", v)} />₮ +{" "}
-          <InlineField value={data.childCount} placeholder="хүүхэд" min={54} onChange={(v) => update("childCount", v)} /> хүүхэд{" "}
-          <InlineField value={data.childPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("childPrice", v)} /> ₮ НИЙТ ТӨЛӨХ -{" "}
+          <InlineField value={data.childCount} placeholder="жижиг хүүхэд" min={54} onChange={(v) => update("childCount", v)} /> жижиг хүүхэд{" "}
+          <InlineField value={data.childPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("childPrice", v)} /> ₮ +{" "}
+          <InlineField value={data.infantCount} placeholder="нярай" min={54} onChange={(v) => update("infantCount", v)} /> нярай{" "}
+          <InlineField value={data.infantPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("infantPrice", v)} /> ₮ НИЙТ ТӨЛӨХ -{" "}
           <InlineField value={data.totalPrice} placeholder="нийт дүн" min={112} money onChange={(v) => update("totalPrice", v)} />₮
           {(data.extraCostNote.trim().length > 0 || data.extraCost.trim().length > 0) && (
             <>
