@@ -122,7 +122,7 @@ export function buildContractDocx(data: ContractData): Promise<Blob> {
           p("Жуулчлал зохион байгуулагч:", { bold: true, spacingAfter: 80 }),
           p("Овог нэр: Балжинням овогтой Өнөрбат", { spacingAfter: 60 }),
           p("Регистрийн дугаар: ЦГ75080301", { spacingAfter: 60 }),
-          p('Хаяг: Чингэлтэй дүүрэг, 4-р хороо, Анкарагийн гудамж-23 "Tod tower" оффис, 701', { spacingAfter: 60 }),
+          p('Хаяг: Чингэлтэй дүүрэг, 4-р хороо, Анкарагийн гудамж-23 “Tod tower” оффис, 701', { spacingAfter: 60 }),
           p("Утас: 77136633, 89136633, 91172769", { spacingAfter: 60 }),
           p("Гарын үсэг: ______________________", { spacingAfter: 60 }),
           p("(Тамга, тэмдэг)")
