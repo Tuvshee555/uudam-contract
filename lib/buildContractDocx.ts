@@ -17,6 +17,15 @@ function h2(text: string) {
   });
 }
 
+function blank(value: string) {
+  return value.trim() || "____";
+}
+
+function money(value: string) {
+  const parsed = Number.parseFloat(value.replace(/[,\s]/g, ""));
+  return Number.isFinite(parsed) ? new Intl.NumberFormat("mn-MN").format(Math.round(parsed)) : "______";
+}
+
 export function buildContractDocx(data: ContractData): Promise<Blob> {
   const extraCostLine =
     data.extraCostNote.trim().length > 0 || data.extraCost.trim().length > 0
@@ -52,7 +61,7 @@ export function buildContractDocx(data: ContractData): Promise<Blob> {
 
           h2("3. Ажил үйлчилгээний төлбөр"),
           p(
-            `3.1 Жуулчлалын үйлчилгээний нийт төлбөр - ${data.adultCount} том хүн* ${data.adultPrice}₮ + ${data.childCount} жижиг хүүхэд ${data.childPrice}₮ + ${data.infantCount} нярай ${data.infantPrice}₮ НИЙТ ТӨЛӨХ - ${data.totalPrice}₮${extraCostLine}. Аяллын урьдчилгаа төлбөр хүн тус бүр 30-50% төлж, аяллын суудлаа баталгаажуулна. Аяллын үлдэгдэл төлбөрийг нислэгтэй аяллын аялагчид аялал явахаас 14 хоногийн өмнө, газрын аяллын аялагчид 7 хоногийн өмнө төлж дуусгана. Худалдаа хөгжлийн банк 16000 4000 413143429 Уудам Тэс Магнай ХХК данс руу аяллын төлбөрийг шилжүүлнэ.`
+            `3.1 Жуулчлалын үйлчилгээний нийт төлбөр - ${blank(data.adultCount)} том хүн* ${money(data.adultPrice)}₮ + ${blank(data.childCount)} жижиг хүүхэд ${money(data.childPrice)}₮ + ${blank(data.infantCount)} нярай ${money(data.infantPrice)}₮ НИЙТ ТӨЛӨХ - ${money(data.totalPrice)}₮${extraCostLine}. Аяллын урьдчилгаа төлбөр хүн тус бүр 30-50% төлж, аяллын суудлаа баталгаажуулна. Аяллын үлдэгдэл төлбөрийг нислэгтэй аяллын аялагчид аялал явахаас 14 хоногийн өмнө, газрын аяллын аялагчид 7 хоногийн өмнө төлж дуусгана. Худалдаа хөгжлийн банк 16000 4000 413143429 Уудам Тэс Магнай ХХК данс руу аяллын төлбөрийг шилжүүлнэ.`
           ),
           p("3.3 Аяллын урьдчилгаа төлбөр аяллын төрөл, онцлог, хугацаанааас хамаарч өөр өөр байж болно."),
           p("3.4 Аливаа төлбөрийн үлдэгдлийг аялал эхлэхээс багадаа 10 өдрийн өмнө төлж барагдуулна."),

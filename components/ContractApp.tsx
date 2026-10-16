@@ -106,7 +106,7 @@ function formatMoney(value: number) {
 }
 
 function toTitleCase(value: string) {
-  return value.replace(/[^\s-]+/gu, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  return value.replace(/[^\s.\-]+/gu, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
 }
 
 function computeTotalPrice(data: ContractData) {
@@ -778,11 +778,11 @@ function ContractDocument({
         <p>2.2 Гэнэтийн болон давагдашгүй хүчин зүйлийн шинжтэй нөхцөл байдлын улмаас Жуулчлал зохион байгуулагч нь ажлыг хугацаанд нь гүйцэтгэж чадахгүйд хүрвэл жуулчинд нэн даруй мэдэгдэж жуулчин нь нэмэлт хугацаа тогтоож өгнө.</p>
         <h2>3. Ажил үйлчилгээний төлбөр</h2>
         <p>
-          3.16 Жуулчлалын үйлчилгээний нийт төлбөр - <InlineField value={data.adultCount} placeholder="том хүн" min={54} onChange={(v) => update("adultCount", v)} /> том хүн*
+          3.1 Жуулчлалын үйлчилгээний нийт төлбөр - <InlineField value={data.adultCount} placeholder="тоо" min={54} onChange={(v) => update("adultCount", v)} /> том хүн*
           <InlineField value={data.adultPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("adultPrice", v)} />₮ +{" "}
-          <InlineField value={data.childCount} placeholder="жижиг хүүхэд" min={54} onChange={(v) => update("childCount", v)} /> жижиг хүүхэд{" "}
+          <InlineField value={data.childCount} placeholder="тоо" min={54} onChange={(v) => update("childCount", v)} /> жижиг хүүхэд{" "}
           <InlineField value={data.childPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("childPrice", v)} /> ₮ +{" "}
-          <InlineField value={data.infantCount} placeholder="нярай" min={54} onChange={(v) => update("infantCount", v)} /> нярай{" "}
+          <InlineField value={data.infantCount} placeholder="тоо" min={54} onChange={(v) => update("infantCount", v)} /> нярай{" "}
           <InlineField value={data.infantPrice} placeholder="төлбөр" min={92} money onChange={(v) => update("infantPrice", v)} /> ₮ НИЙТ ТӨЛӨХ -{" "}
           <InlineField value={data.totalPrice} placeholder="нийт дүн" min={112} money onChange={(v) => update("totalPrice", v)} />₮
           {(data.extraCostNote.trim().length > 0 || data.extraCost.trim().length > 0) && (
